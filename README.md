@@ -1,7 +1,3 @@
-Here's a well-structured **README.md** file with improved clarity, formatting, and details:  
-
----
-
 ```markdown
 # 🚀 Dynamic-Hierarchical-3D-Robot-Rendering
 
