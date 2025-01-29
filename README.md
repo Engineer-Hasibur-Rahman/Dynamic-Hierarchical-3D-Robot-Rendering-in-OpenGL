@@ -71,12 +71,6 @@ To run this project, you need:
 
 ---
 
-## 🙏 Acknowledgements
-- Created for the **CPS511: Computer Graphics** course at **Toronto Metropolitan University**.
-- Uses **OpenGL** for real-time rendering and hierarchical transformations.
-
----
-
 ## 📧 Contact
 For questions, suggestions, or feedback, feel free to reach out:  
 📩 **Your Email**: [hasibur2060@gmail.com](mailto:hasibur2060@gmail.com)
