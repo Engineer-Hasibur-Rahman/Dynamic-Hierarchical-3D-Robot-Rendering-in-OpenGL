@@ -1059,3 +1059,138 @@ void resetRobot(int param) {
 	}
 }
 
+void keyboard(unsigned char key, int x, int y) {
+	switch (key) {
+	case 'r':
+	case 'R':
+		activeJoint = ROBOT;
+		break;
+	case 't':
+	case 'T':
+		activeJoint = UPPER_BODY;
+		break;
+	case 'f':
+	case 'F':
+		activeJoint = HEAD;
+		break;
+	case 'e':
+	case 'E':
+		activeJoint = LEFT_ARM;
+		break;
+	case 'q':
+	case 'Q':
+		activeJoint = RIGHT_ARM;
+		break;
+	case 'g':
+	case 'G':
+		activeJoint = HIP;
+		break;
+	case 'd':
+	case 'D':
+		activeJoint = LEFT_LEG;
+		break;
+	case 'a':
+	case 'A':
+		activeJoint = RIGHT_LEG;
+		break;
+	case 'x':
+	case 'X':
+		activeJoint = NONE;
+		break;
+	case 'w':
+		walkStop = false;
+		glutTimerFunc(10, robotWalk, 0);
+		break;
+	case 'W':
+		walkStop = true;
+		glutTimerFunc(10, resetRobotWalk, 0);
+		break;
+	case 's':
+		cannonStop = false;
+		glutTimerFunc(10, cannonSpin, 0);
+		break;
+	case 'S':
+		cannonStop = true;
+		break;
+	case 'z':
+	case 'Z':
+		cannonStop = true;
+		walkStop = true;
+		glutTimerFunc(10, resetRobot, 0);
+		break;
+	}
+	glutPostRedisplay();   // Trigger a window redisplay
+}
+
+void functionKeys(int key, int x, int y) {
+	switch (key) {
+		case GLUT_KEY_F1: // Help Key, prints to Terminal/Debugger
+			cout << "\n[Help]\nPress a joint key, then use the UP and DOWN arrow keys to adjust the joint's angle.\n\tR - Entire Robot\n\tT - Upper Body\n\tF - Head\n\tG - Hip\n\tQ - Right Arm\n\tE - Left Arm\n\tA - Right Leg\n\tD - Left Leg\n\n\tX - Deselect Joint\n\tZ - Reset Robot\n\nAnimations (case sensitive):\n\tw - Start WALKING ANIMATION\n\tW - Stop WALKING ANIMATION\n\ts - Start CANNON SPINNING ANIMATION\n\tS - Stop CANNON SPINNING ANIMATION\n\n";
+			break;
+
+		case GLUT_KEY_UP:
+			if (activeJoint == ROBOT) {
+				if (robotAngle == 360) {
+					robotAngle = 2;
+				}
+				else {
+					robotAngle += 2.0;
+				}
+			}
+			else if (activeJoint == UPPER_BODY && upperAngle > -46) {
+				upperAngle -= 2.0;
+			}
+			else if (activeJoint == HEAD && headAngle > -46) {
+				headAngle -= 2.0;
+			}
+			else if (activeJoint == LEFT_ARM && leftArmAngle > -210) {
+				leftArmAngle -= 2.0;
+			}
+			else if (activeJoint == RIGHT_ARM && rightArmAngle > -210) {
+				rightArmAngle -= 2.0;
+			}
+			else if (activeJoint == HIP && hipAngle > -15) {
+				hipAngle -= 1.0;
+			}
+			else if (activeJoint == LEFT_LEG && leftLegAngle > -46) {
+				leftLegAngle -= 2.0;
+			}
+			else if (activeJoint == RIGHT_LEG && rightLegAngle > -46) {
+				rightLegAngle -= 2.0;
+			}
+			break;
+		
+		case GLUT_KEY_DOWN:
+			if (activeJoint == ROBOT) {
+				if (robotAngle == -360) {
+					robotAngle = -2;
+				}
+				else {
+					robotAngle -= 2.0;
+				}
+			}
+			else if (activeJoint == UPPER_BODY && upperAngle < 46) {
+				upperAngle += 2.0;
+			}
+			else if (activeJoint == HEAD && headAngle < 46) {
+				headAngle += 2.0;
+			}
+			else if (activeJoint == LEFT_ARM && leftArmAngle < 30) {
+				leftArmAngle += 2.0;
+			}
+			else if (activeJoint == RIGHT_ARM && rightArmAngle < 30) {
+				rightArmAngle += 2.0;
+			}
+			else if (activeJoint == HIP && hipAngle < 15) {
+				hipAngle += 1.0;
+			}
+			else if (activeJoint == LEFT_LEG && leftLegAngle < 46) {
+				leftLegAngle += 2.0;
+			}
+			else if (activeJoint == RIGHT_LEG && rightLegAngle < 46) {
+				rightLegAngle += 2.0;
+			}
+			break;
+	}
+	glutPostRedisplay();   // Trigger a window redisplay
+}
