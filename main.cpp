@@ -129,11 +129,10 @@ Joint activeJoint = NONE;
 // Flags
 bool cannonStop = true;
 bool walkStop = true;
-bool walkFlag = true; // true = right leg step | false = left leg step
+// true = right leg step | false = left leg step
+bool walkFlag = true; 
 
 GLUquadric* quadric; // For quadric surfaces
-
-// Material Colours
 
 // Material Colours
 // Robot Blue
@@ -218,4 +217,781 @@ void cannonSpin(int param);
 void robotWalk(int param);
 void resetRobotWalk(int param);
 void resetRobot(int param);
+
+
+
+int main(int argc, char** argv) {
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+	glutInitWindowSize(vWidth, vHeight);
+	glutInitWindowPosition(200, 30);
+	glutCreateWindow("Mobile Suit RX-78-2 Gundam");
+
+	initOpenGL(vWidth, vHeight);
+
+	glutDisplayFunc(display);
+	glutReshapeFunc(reshape);
+	glutKeyboardFunc(keyboard);
+	glutSpecialFunc(functionKeys);
+
+	// Prints help output to Terminal/Debugger
+	cout << "\n[Help]\nPress a joint key, then use the UP and DOWN arrow keys to adjust the joint's angle.\n\tR - Entire Robot\n\tT - Upper Body\n\tF - Head\n\tG - Hip\n\tQ - Right Arm\n\tE - Left Arm\n\tA - Right Leg\n\tD - Left Leg\n\n\tX - Deselect Joint\n\tZ - Reset Robot\n\nAnimations (case sensitive):\n\tw - Start WALKING ANIMATION\n\tW - Stop WALKING ANIMATION\n\ts - Start CANNON SPINNING ANIMATION\n\tS - Stop CANNON SPINNING ANIMATION\n\n";
+
+	glutMainLoop();
+
+	return 0;
+}
+
+void initOpenGL(int w, int h) {
+	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+	glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, light_specular);
+
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
+	glLightfv(GL_LIGHT1, GL_POSITION, light_position1);
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHT1);   // This second light is currently off
+
+	glEnable(GL_DEPTH_TEST);   // Remove hidded surfaces
+	glShadeModel(GL_SMOOTH);   // Use smooth shading, makes boundaries between polygons harder to see 
+	glClearColor(0.4F, 0.4F, 0.4F, 0.0F);  // Color and depth for glClear
+	glClearDepth(1.0f);
+	glEnable(GL_NORMALIZE);    // Renormalize normal vectors 
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);   // Nicer perspective
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+
+void display(void) {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glLoadIdentity();
+	gluLookAt(0.0, 6.0, 30.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+
+	drawRobot();
+
+	glutSwapBuffers();
+}
+
+
+void drawRobot() {
+	glPushMatrix();
+		glRotatef(robotAngle, 0.0, 1.0, 0.0); // Ensures that the entire robot moves with the robot angle
+		glPushMatrix();
+			glRotatef(upperAngle, 0.0, 1.0, 0.0); // Ensures that the entire upper body moves with the upper angle
+			drawBody();
+			drawHead();
+			drawLeftArm();
+			drawRightArm();
+		glPopMatrix();
+		drawHip();
+		drawLeftLeg();
+		drawRightLeg();
+	glPopMatrix();
+}
+
+// BASE PART
+void drawBody() {
+	glMaterialfv(GL_FRONT, GL_AMBIENT, blue_ambient);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, blue_specular);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, blue_diffuse);
+	glMaterialfv(GL_FRONT, GL_SHININESS, blue_shininess);
+
+	glPushMatrix();
+		glTranslatef(0.0, 0.95, 0.0);
+		glScalef(robotBodyWidth, robotBodyLength, robotBodyDepth);
+		glutSolidCube(1.0);
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(0.0, 1.7, 1.0);
+		glPushMatrix();
+			glRotatef(45, 1.0, 0.0, 0.0);
+			glScalef(robotBodyChestWidth, robotBodyChestLength, robotBodyChestDepth);
+			glutSolidCube(1.0);
+		glPopMatrix();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(0.0, 0.325, 1.5);
+		glPushMatrix();
+			glRotatef(15, 1.0, 0.0, 0.0);
+			glScalef(robotBodyMiddleWidth, robotBodyMiddleLength, robotBodyMiddleDepth);
+			glutSolidCube(1.0);
+		glPopMatrix();
+	glPopMatrix();
+
+	glMaterialfv(GL_FRONT, GL_AMBIENT, yellow_ambient);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, yellow_specular);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, yellow_diffuse);
+	glMaterialfv(GL_FRONT, GL_SHININESS, yellow_shininess);
+
+	glPushMatrix();
+		glTranslatef(2.5, 1.5, 2.0);
+		glPushMatrix();
+			glRotatef(45, 1.0, 0.0, 0.0);
+			glScalef(robotBodyChestCubeWidth, robotBodyChestCubeLength, robotBodyChestCubeDepth);
+			glutSolidCube(1.0);
+		glPopMatrix();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(-2.5, 1.5, 2.0);
+		glPushMatrix();
+			glRotatef(45, 1.0, 0.0, 0.0);
+			glScalef(robotBodyChestCubeWidth, robotBodyChestCubeLength, robotBodyChestCubeDepth);
+			glutSolidCube(1.0);
+		glPopMatrix();
+	glPopMatrix();
+
+	glMaterialfv(GL_FRONT, GL_AMBIENT, red_ambient);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, red_specular);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, red_diffuse);
+	glMaterialfv(GL_FRONT, GL_SHININESS, red_shininess);
+
+	glPushMatrix();
+		glTranslatef(0.0, -2.45, 0.0);
+		glPushMatrix();
+		glScalef(robotBodyWaistWidth, robotBodyWaistLength, robotBodyWaistDepth);
+		glutSolidCube(1.0);
+		glPopMatrix();
+	glPopMatrix();
+
+	glMaterialfv(GL_FRONT, GL_AMBIENT, grey_ambient);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, grey_specular);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, grey_diffuse);
+	glMaterialfv(GL_FRONT, GL_SHININESS, grey_shininess);
+
+	glPushMatrix();
+		glTranslatef(0.0, 0.6, -2.0);
+		glScalef(robotBodyBackpackWidth, robotBodyBackpackLength, robotBodyBackpackDepth);
+		glutSolidCube(1.0);
+	glPopMatrix();
+
+	glMaterialfv(GL_FRONT, GL_AMBIENT, white_ambient);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, white_specular);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, white_diffuse);
+	glMaterialfv(GL_FRONT, GL_SHININESS, white_shininess);
+
+	glPushMatrix();
+		glTranslatef(-3.65, 6.0, -2.25);
+		glPushMatrix();
+			glRotatef(90, 1.0, 0.0, 0.0);
+			glRotatef(30, 0.0, 1.0, 0.0);
+			quadric = gluNewQuadric();
+			gluCylinder(quadric, robotBodyCylinderRadiusTop, robotBodyCylinderRadiusBottom, robotBodyCylinderDepth, 20, 20);
+			gluDisk(quadric, 0.0, robotBodyCylinderRadiusTop, 20, 1);
+			gluDeleteQuadric(quadric);
+		glPopMatrix();
+	glPopMatrix();
+
+	glPushMatrix();
+		glTranslatef(3.65, 6.0, -2.25);
+		glPushMatrix();
+			glRotatef(90, 1.0, 0.0, 0.0);
+			glRotatef(-30, 0.0, 1.0, 0.0);
+			quadric = gluNewQuadric();
+			gluCylinder(quadric, robotBodyCylinderRadiusTop, robotBodyCylinderRadiusBottom, robotBodyCylinderDepth, 20, 20);
+			gluDisk(quadric, 0.0, robotBodyCylinderRadiusTop, 20, 1);
+			gluDeleteQuadric(quadric);
+		glPopMatrix();
+	glPopMatrix();
+}
+
+void drawHead() {
+	glPushMatrix();
+		glRotatef(headAngle, 0.0, 1.0, 0.0);
+
+		glMaterialfv(GL_FRONT, GL_AMBIENT, white_ambient);
+		glMaterialfv(GL_FRONT, GL_SPECULAR, white_specular);
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, white_diffuse);
+		glMaterialfv(GL_FRONT, GL_SHININESS, white_shininess);
+
+		glPushMatrix();
+			glTranslatef(0.0, (0.5 * 7.0 + 0.5 * robotHeadLength), 0.0);
+			glPushMatrix();
+				glScalef(robotHeadWidth, robotHeadLength, robotHeadDepth);
+				glutSolidCube(1.0);
+			glPopMatrix();
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(0.0, (0.5 * 7.0 + robotHeadLength + 0.1), 0.05);
+			glPushMatrix();
+				glScalef(robotHeadBandWidth, robotHeadBandLength, robotHeadBandDepth);
+				glutSolidCube(1.0);
+			glPopMatrix();
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(0.0, (0.5 * 7.0 + robotHeadLength - 0.1), -1.55);
+			glPushMatrix();
+				glScalef(robotHeadBandBackWidth, robotHeadBandBackLength, robotHeadBandBackDepth);
+				glutSolidCube(1.0);
+			glPopMatrix();
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(0.1, (0.5 * 7.0 + robotHeadLength - 0.4), 1.75);
+			glPushMatrix();
+				glRotatef(-90, 1.0, 0.0, 0.0);
+				glRotatef(50, 0.0, 1.0, 0.0);
+				glutSolidCone(robotHeadAntennaRadius, robotHeadAntennaLength, 20, 20);
+			glPopMatrix();
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(-0.1, (0.5 * 7.0 + robotHeadLength - 0.4), 1.75);
+			glPushMatrix();
+				glRotatef(-90, 1.0, 0.0, 0.0);
+				glRotatef(-50, 0.0, 1.0, 0.0);
+				glutSolidCone(robotHeadAntennaRadius, robotHeadAntennaLength, 20, 20);
+			glPopMatrix();
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(0.1, (0.5 * 7.0 + robotHeadLength - 0.45), 1.75);
+			glPushMatrix();
+				glRotatef(90, 1.0, 0.0, 0.0);
+				glRotatef(65, 0.0, 1.0, 0.0);
+				glutSolidCone(robotHeadBrowRadius, robotHeadBrowLength, 20, 20);
+			glPopMatrix();
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(-0.1, (0.5 * 7.0 + robotHeadLength - 0.45), 1.75);
+			glPushMatrix();
+				glRotatef(90, 1.0, 0.0, 0.0);
+				glRotatef(-65, 0.0, 1.0, 0.0);
+				glutSolidCone(robotHeadBrowRadius, robotHeadBrowLength, 20, 20);
+			glPopMatrix();
+		glPopMatrix();
+
+		glMaterialfv(GL_FRONT, GL_AMBIENT, red_ambient);
+		glMaterialfv(GL_FRONT, GL_SPECULAR, red_specular);
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, red_diffuse);
+		glMaterialfv(GL_FRONT, GL_SHININESS, red_shininess);
+
+		glPushMatrix();
+			glTranslatef(0.0, (0.5 * 7.0 + robotHeadLength - 0.4), 1.8);
+			glPushMatrix();
+				glScalef(robotHeadRedTopWidth, robotHeadRedTopLength, robotHeadRedTopDepth);
+				glutSolidOctahedron();
+			glPopMatrix();
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(0.0, (0.5 * 7.0 + robotHeadLength - 2.9), 1.75);
+			glPushMatrix();
+				glScalef(robotHeadRedBottomWidth, robotHeadRedBottomLength, robotHeadRedBottomDepth);
+				glutSolidCube(1.0);
+			glPopMatrix();
+		glPopMatrix();
+
+		glMaterialfv(GL_FRONT, GL_AMBIENT, yellow_ambient);
+		glMaterialfv(GL_FRONT, GL_SPECULAR, yellow_specular);
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, yellow_diffuse);
+		glMaterialfv(GL_FRONT, GL_SHININESS, yellow_shininess);
+
+		glPushMatrix();
+			glTranslatef(0.45, (0.5 * 7.0 + robotHeadLength - 0.9), 1.75);
+			glPushMatrix();
+				glRotatef(-10, 0.0, 0.0, 1.0);
+				glScalef(robotHeadEyeWidth, robotHeadEyeLength, robotHeadEyeDepth);
+				glutSolidDodecahedron();
+			glPopMatrix();
+		glPopMatrix();
+
+		glPushMatrix();
+			glTranslatef(-0.45, (0.5 * 7.0 + robotHeadLength - 0.9), 1.75);
+			glPushMatrix();
+				glRotatef(10, 0.0, 0.0, 1.0);
+				glScalef(robotHeadEyeWidth, robotHeadEyeLength, robotHeadEyeDepth);
+				glutSolidDodecahedron();
+			glPopMatrix();
+		glPopMatrix();
+	glPopMatrix();
+}
+
+void drawLeftArm() {
+	glPushMatrix();
+		glTranslatef(-(0.5 * robotBodyWidth + 0.5 * robotArmWidth), (0.35 * robotArmLength), 0.0);
+		glRotatef(leftArmAngle, 1.0, 0.0, 0.0);
+		glTranslatef((0.5 * robotBodyWidth + 0.5 * robotArmWidth), -(0.35 * robotArmLength), 0.0);
+
+		glTranslatef((0.5 * robotBodyWidth + 0.5 * robotArmWidth + 0.4), 0.0, 0.0);
+		glPushMatrix();
+			glMaterialfv(GL_FRONT, GL_AMBIENT, white_ambient);
+			glMaterialfv(GL_FRONT, GL_SPECULAR, white_specular);
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, white_diffuse);
+			glMaterialfv(GL_FRONT, GL_SHININESS, white_shininess);
+
+			glPushMatrix();
+				glTranslatef(0.0, -1.25, 0.0);
+				glPushMatrix();
+					glScalef(robotArmWidth, robotArmLength, robotArmDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(0.0, 2.6, 0.0);
+				glPushMatrix();
+					glScalef(robotShoulderWidth, robotShoulderLength, robotShoulderDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glMaterialfv(GL_FRONT, GL_AMBIENT, grey_ambient);
+			glMaterialfv(GL_FRONT, GL_SPECULAR, grey_specular);
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, grey_diffuse);
+			glMaterialfv(GL_FRONT, GL_SHININESS, grey_shininess);
+
+			glPushMatrix();
+				glTranslatef(0.0, -6.0, 0.0);
+				glPushMatrix();
+					glScalef(robotHandWidth, robotHandLength, robotHandDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+		glPopMatrix();
+	glPopMatrix();
+}
+
+
+
+
+void drawRightArm() {
+	glPushMatrix();
+		glTranslatef(-(0.5 * robotBodyWidth + 0.5 * robotArmWidth), (0.35 * robotArmLength), 0.0);
+		glRotatef(rightArmAngle, 1.0, 0.0, 0.0);
+		glTranslatef((0.5 * robotBodyWidth + 0.5 * robotArmWidth), -(0.35 * robotArmLength), 0.0);
+
+		glTranslatef(-(0.5 * robotBodyWidth + 0.5 * robotArmWidth + 0.4), 0.0, 0.0);
+		glPushMatrix();
+			glMaterialfv(GL_FRONT, GL_AMBIENT, white_ambient);
+			glMaterialfv(GL_FRONT, GL_SPECULAR, white_specular);
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, white_diffuse);
+			glMaterialfv(GL_FRONT, GL_SHININESS, white_shininess);
+
+			glPushMatrix();
+				glTranslatef(0.0, -1.25, 0.0);
+				glPushMatrix();
+					glScalef(robotArmWidth, robotArmLength, robotArmDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(0.0, 2.6, 0.0);
+				glPushMatrix();
+					glScalef(robotShoulderWidth, robotShoulderLength, robotShoulderDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glMaterialfv(GL_FRONT, GL_AMBIENT, grey_ambient);
+			glMaterialfv(GL_FRONT, GL_SPECULAR, grey_specular);
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, grey_diffuse);
+			glMaterialfv(GL_FRONT, GL_SHININESS, grey_shininess);
+
+			glPushMatrix();
+				glTranslatef(0.0, -6.0, 0.0);
+				glPushMatrix();
+					glScalef(robotHandWidth, robotHandLength, robotHandDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(0.0, -(0.25 * robotArmLength - 1.0), (0.7 * robotArmWidth + 1.0));
+				glRotatef(cannonAngle, 1.0, 0.0, 0.0);
+
+				glPushMatrix();
+					quadric = gluNewQuadric();
+					gluCylinder(quadric, cannonCylinderRadiusTop, cannonCylinderRadiusBottom, cannonCylinderDepth, 20, 20);
+					gluDisk(quadric, 0.0, cannonCylinderRadiusTop, 20, 1);
+
+					glMaterialfv(GL_FRONT, GL_AMBIENT, red_ambient);
+					glMaterialfv(GL_FRONT, GL_SPECULAR, red_specular);
+					glMaterialfv(GL_FRONT, GL_DIFFUSE, red_diffuse);
+					glMaterialfv(GL_FRONT, GL_SHININESS, red_shininess);
+
+					glPushMatrix();
+						glTranslatef(0.0, 0.0, 1.0);
+						gluDisk(quadric, 0.0, cannonCylinderRadiusTop, 20, 1);
+					glPopMatrix();
+					gluDeleteQuadric(quadric);
+				glPopMatrix();
+
+				glMaterialfv(GL_FRONT, GL_AMBIENT, grey_ambient);
+				glMaterialfv(GL_FRONT, GL_SPECULAR, grey_specular);
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, grey_diffuse);
+				glMaterialfv(GL_FRONT, GL_SHININESS, grey_shininess);
+
+				glPushMatrix();
+					glTranslatef(0.0, 0.0, 7.25);
+					glutSolidTorus(cannonTorusRadiusInner, cannonTorusRadiusOuter, 20, 20);
+				glPopMatrix();
+
+				glPushMatrix();
+					glTranslatef(0.0, -0.4, 0.1);
+					glPushMatrix();
+						glScalef(cannonArmWidth, cannonArmLength, cannonArmDepth);
+						glutSolidCube(1.0);
+					glPopMatrix();
+				glPopMatrix();
+
+				glPushMatrix();
+					glMaterialfv(GL_FRONT, GL_AMBIENT, red_ambient);
+					glMaterialfv(GL_FRONT, GL_SPECULAR, red_specular);
+					glMaterialfv(GL_FRONT, GL_DIFFUSE, red_diffuse);
+					glMaterialfv(GL_FRONT, GL_SHININESS, red_shininess);
+
+					glRotatef(cannonSpinAngle, 0.0, 0.0, 1.0);
+					glTranslatef(0.0, 0.0, 0.1);
+					glPushMatrix();
+						glTranslatef(0.0, 0.0, 0.0);
+						glPushMatrix();
+							quadric = gluNewQuadric();
+							gluCylinder(quadric, cannonCylinderMiniRadiusTop, cannonCylinderMiniRadiusBottom, cannonCylinderMiniDepth, 20, 20);
+							gluDisk(quadric, 0.0, cannonCylinderMiniRadiusTop, 20, 1);
+							gluDeleteQuadric(quadric);
+						glPopMatrix();
+					glPopMatrix();
+
+					glPushMatrix();
+						glTranslatef(0.7, 0.0, 0.0);
+						glPushMatrix();
+							quadric = gluNewQuadric();
+							gluCylinder(quadric, cannonCylinderMiniRadiusTop, cannonCylinderMiniRadiusBottom, cannonCylinderMiniDepth, 20, 20);
+							gluDisk(quadric, 0.0, cannonCylinderMiniRadiusTop, 20, 1);
+							gluDeleteQuadric(quadric);
+						glPopMatrix();
+					glPopMatrix();
+
+					glPushMatrix();
+						glTranslatef(-0.7, 0.0, 0.0);
+						glPushMatrix();
+							quadric = gluNewQuadric();
+							gluCylinder(quadric, cannonCylinderMiniRadiusTop, cannonCylinderMiniRadiusBottom, cannonCylinderMiniDepth, 20, 20);
+							gluDisk(quadric, 0.0, cannonCylinderMiniRadiusTop, 20, 1);
+							gluDeleteQuadric(quadric);
+						glPopMatrix();
+					glPopMatrix();
+
+					glPushMatrix();
+						glTranslatef(0.0, 0.7, 0.0);
+						glPushMatrix();
+							quadric = gluNewQuadric();
+							gluCylinder(quadric, cannonCylinderMiniRadiusTop, cannonCylinderMiniRadiusBottom, cannonCylinderMiniDepth, 20, 20);
+							gluDisk(quadric, 0.0, cannonCylinderMiniRadiusTop, 20, 1);
+							gluDeleteQuadric(quadric);
+						glPopMatrix();
+					glPopMatrix();
+
+					glPushMatrix();
+						glTranslatef(0.0, -0.7, 0.0);
+						glPushMatrix();
+							quadric = gluNewQuadric();
+							gluCylinder(quadric, cannonCylinderMiniRadiusTop, cannonCylinderMiniRadiusBottom, cannonCylinderMiniDepth, 20, 20);
+							gluDisk(quadric, 0.0, cannonCylinderMiniRadiusTop, 20, 1);
+							gluDeleteQuadric(quadric);
+						glPopMatrix();
+					glPopMatrix();
+
+					glPushMatrix();
+						glTranslatef(0.5, 0.5, 0.0);
+						glPushMatrix();
+							quadric = gluNewQuadric();
+							gluCylinder(quadric, cannonCylinderMiniRadiusTop, cannonCylinderMiniRadiusBottom, cannonCylinderMiniDepth, 20, 20);
+							gluDisk(quadric, 0.0, cannonCylinderMiniRadiusTop, 20, 1);
+							gluDeleteQuadric(quadric);
+						glPopMatrix();
+					glPopMatrix();
+
+					glPushMatrix();
+						glTranslatef(-0.5, 0.5, 0.0);
+						glPushMatrix();
+							quadric = gluNewQuadric();
+							gluCylinder(quadric, cannonCylinderMiniRadiusTop, cannonCylinderMiniRadiusBottom, cannonCylinderMiniDepth, 20, 20);
+							gluDisk(quadric, 0.0, cannonCylinderMiniRadiusTop, 20, 1);
+							gluDeleteQuadric(quadric);
+						glPopMatrix();
+					glPopMatrix();
+
+					glPushMatrix();
+						glTranslatef(0.5, -0.5, 0.0);
+						glPushMatrix();
+							quadric = gluNewQuadric();
+							gluCylinder(quadric, cannonCylinderMiniRadiusTop, cannonCylinderMiniRadiusBottom, cannonCylinderMiniDepth, 20, 20);
+							gluDisk(quadric, 0.0, cannonCylinderMiniRadiusTop, 20, 1);
+							gluDeleteQuadric(quadric);
+						glPopMatrix();
+					glPopMatrix();
+
+					glPushMatrix();
+						glTranslatef(-0.5, -0.5, 0.0);
+						glPushMatrix();
+							quadric = gluNewQuadric();
+							gluCylinder(quadric, cannonCylinderMiniRadiusTop, cannonCylinderMiniRadiusBottom, cannonCylinderMiniDepth, 20, 20);
+							gluDisk(quadric, 0.0, cannonCylinderMiniRadiusTop, 20, 1);
+							gluDeleteQuadric(quadric);
+						glPopMatrix();
+					glPopMatrix();
+				glPopMatrix();
+			glPopMatrix();
+		glPopMatrix();
+	glPopMatrix();
+}
+
+void drawHip() {
+	glPushMatrix();
+		glRotatef(hipAngle, 0.0, 1.0, 0.0);
+		glPushMatrix();
+			glMaterialfv(GL_FRONT, GL_AMBIENT, white_ambient);
+			glMaterialfv(GL_FRONT, GL_SPECULAR, white_specular);
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, white_diffuse);
+			glMaterialfv(GL_FRONT, GL_SHININESS, white_shininess);
+
+			glPushMatrix();
+				glTranslatef(0.0, -(1.655 * robotHipLength), 0.0);
+				glPushMatrix();
+					glScalef(robotHipWidth, robotHipLength, robotHipDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(0.0, -(1.655 * robotHipLength), 1.0);
+				glPushMatrix();
+					glScalef(robotHipMiddleWidth, robotHipMiddleLength, robotHipMiddleDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(0.0, -(1.655 * robotHipLength), -1.0);
+				glPushMatrix();
+					glScalef(robotHipMiddleWidth, robotHipMiddleLength, robotHipMiddleDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glMaterialfv(GL_FRONT, GL_AMBIENT, yellow_ambient);
+			glMaterialfv(GL_FRONT, GL_SPECULAR, yellow_specular);
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, yellow_diffuse);
+			glMaterialfv(GL_FRONT, GL_SHININESS, yellow_shininess);
+
+			glPushMatrix();
+				glTranslatef(2.25, -(1.655 * robotHipLength), 1.5);
+				glPushMatrix();
+					glScalef(robotHipCubeWidth, robotHipCubeLength, robotHipCubeDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(-2.25, -(1.655 * robotHipLength), 1.5);
+				glPushMatrix();
+					glScalef(robotHipCubeWidth, robotHipCubeLength, robotHipCubeDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(2.25, -(1.655 * robotHipLength), -1.5);
+				glPushMatrix();
+					glScalef(robotHipCubeWidth, robotHipCubeLength, robotHipCubeDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(-2.25, -(1.655 * robotHipLength), -1.5);
+				glPushMatrix();
+					glScalef(robotHipCubeWidth, robotHipCubeLength, robotHipCubeDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+		glPopMatrix();
+	glPopMatrix();
+}
+
+void drawLeftLeg() {
+	glPushMatrix();
+		glTranslatef((0.325 * robotHipWidth), (-0.725 * robotLegLength), 0.0);
+		glRotatef(leftLegAngle, 1.0, 0.0, 0.0);
+		glTranslatef(-(0.325 * robotHipWidth), -(-0.725 * robotLegLength), 0.0);
+		glPushMatrix();
+			glMaterialfv(GL_FRONT, GL_AMBIENT, white_ambient);
+			glMaterialfv(GL_FRONT, GL_SPECULAR, white_specular);
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, white_diffuse);
+			glMaterialfv(GL_FRONT, GL_SHININESS, white_shininess);
+
+			glPushMatrix();
+				glTranslatef((0.325 * robotHipWidth), -(1.655 * robotHipLength + 6.5), 0.0);
+				glPushMatrix();
+					glScalef(robotLegWidth, robotLegLength, robotLegDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef((0.325 * robotHipWidth), -(1.655 * robotHipLength + 6.5 + 0.5), 0.5);
+				glPushMatrix();
+					glScalef(robotKneeWidth, robotKneeLength, robotKneeDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glMaterialfv(GL_FRONT, GL_AMBIENT, red_ambient);
+			glMaterialfv(GL_FRONT, GL_SPECULAR, red_specular);
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, red_diffuse);
+			glMaterialfv(GL_FRONT, GL_SHININESS, red_shininess);
+
+			glPushMatrix();
+				glTranslatef((0.325 * robotHipWidth), -(1.655 * robotHipLength + 6.5 + 4.5), 0.75);
+				glPushMatrix();
+					glScalef(robotFeetWidth, robotFeetLength, robotFeetDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+		glPopMatrix();
+	glPopMatrix();
+}
+
+void drawRightLeg() {
+	glPushMatrix();
+		glTranslatef((0.325 * robotHipWidth), (-0.725 * robotLegLength), 0.0);
+		glRotatef(rightLegAngle, 1.0, 0.0, 0.0);
+		glTranslatef(-(0.325 * robotHipWidth), -(-0.725 * robotLegLength), 0.0);
+		glPushMatrix();
+			glMaterialfv(GL_FRONT, GL_AMBIENT, white_ambient);
+			glMaterialfv(GL_FRONT, GL_SPECULAR, white_specular);
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, white_diffuse);
+			glMaterialfv(GL_FRONT, GL_SHININESS, white_shininess);
+
+			glPushMatrix();
+				glTranslatef(-(0.325 * robotHipWidth), -(1.655 * robotHipLength + 6.5), 0.0);
+				glPushMatrix();
+					glScalef(robotLegWidth, robotLegLength, robotLegDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(-(0.325 * robotHipWidth), -(1.655 * robotHipLength + 6.5 + 0.5), 0.5);
+				glPushMatrix();
+					glScalef(robotKneeWidth, robotKneeLength, robotKneeDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+
+			glMaterialfv(GL_FRONT, GL_AMBIENT, red_ambient);
+			glMaterialfv(GL_FRONT, GL_SPECULAR, red_specular);
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, red_diffuse);
+			glMaterialfv(GL_FRONT, GL_SHININESS, red_shininess);
+
+			glPushMatrix();
+				glTranslatef(-(0.325 * robotHipWidth), -(1.655 * robotHipLength + 6.5 + 4.5), 0.75);
+				glPushMatrix();
+					glScalef(robotFeetWidth, robotFeetLength, robotFeetDepth);
+					glutSolidCube(1.0);
+				glPopMatrix();
+			glPopMatrix();
+		glPopMatrix();
+	glPopMatrix();
+}
+
+void reshape(int w, int h) {
+	glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(60.0, (GLdouble)w / h, 0.2, 40.0);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	gluLookAt(0.0, 6.0, 22.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+}
+
+void cannonSpin(int param) {
+	if (!cannonStop) {
+		cannonSpinAngle += 2.0;
+		glutPostRedisplay();
+		glutTimerFunc(10, cannonSpin, 0);
+	}
+}
+
+void robotWalk(int param) {
+	if (!walkStop) {
+		if (walkFlag) {
+			if (rightLegAngle > -46) {
+				rightLegAngle -= 2.0;
+			}
+			if (hipAngle < 15) {
+				hipAngle += 1.0;
+			}
+			if (leftLegAngle < 46) {
+				leftLegAngle += 2.0;
+			}
+
+			if ((rightLegAngle == -46) && (hipAngle == 15) && (leftLegAngle == 46)) {
+				walkFlag = false;
+			}
+		}
+		else {
+			if (rightLegAngle < 46) {
+				rightLegAngle += 2.0;
+			}
+			if (hipAngle > -15) {
+				hipAngle -= 1.0;
+			}
+			if (leftLegAngle > -46) {
+				leftLegAngle -= 2.0;
+			}
+
+			if ((rightLegAngle == 46) && (hipAngle == -15) && (leftLegAngle == -46)) {
+				walkFlag = true;
+			}
+		}
+		glutPostRedisplay();
+		glutTimerFunc(10, robotWalk, 0);
+	}
+}
+
+void resetRobotWalk(int param) {
+	if ((rightLegAngle != 0) || (hipAngle != 0) || (leftLegAngle != 0)) {
+		if (rightLegAngle > 0) {
+			rightLegAngle -= 2.0;
+		}
+		else if (rightLegAngle < 0) {
+			rightLegAngle += 2.0;
+		}
+
+		if (hipAngle > 0) {
+			hipAngle -= 1.0;
+		}
+		else if (hipAngle < 0) {
+			hipAngle += 1.0;
+		}
+
+		if (leftLegAngle > 0) {
+			leftLegAngle -= 2.0;
+		}
+		else if (leftLegAngle < 0) {
+			leftLegAngle += 2.0;
+		}
+		glutPostRedisplay();
+		glutTimerFunc(10, resetRobotWalk, 0);
+	}
+}
 
