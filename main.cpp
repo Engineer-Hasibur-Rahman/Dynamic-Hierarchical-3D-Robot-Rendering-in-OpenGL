@@ -995,3 +995,67 @@ void resetRobotWalk(int param) {
 	}
 }
 
+
+
+void resetRobot(int param) {
+	if ((robotAngle != 0) || (upperAngle != 0) || (headAngle != 0) || (leftArmAngle != 0) || (rightArmAngle != 0) || (hipAngle != 0) || (rightLegAngle != 0) || (leftLegAngle != 0)) {
+		if (robotAngle > 0) {
+			robotAngle -= 2.0;
+		}
+		else if (robotAngle < 0) {
+			robotAngle += 2.0;
+		}
+
+		if (upperAngle > 0) {
+			upperAngle -= 2.0;
+		}
+		else if (upperAngle < 0) {
+			upperAngle += 2.0;
+		}
+
+		if (headAngle > 0) {
+			headAngle -= 2.0;
+		}
+		else if (headAngle < 0) {
+			headAngle += 2.0;
+		}
+
+		if (leftArmAngle > 0) {
+			leftArmAngle -= 2.0;
+		}
+		else if (leftArmAngle < 0) {
+			leftArmAngle += 2.0;
+		}
+
+		if (rightArmAngle > 0) {
+			rightArmAngle -= 2.0;
+		}
+		else if (rightArmAngle < 0) {
+			rightArmAngle += 2.0;
+		}
+
+		if (hipAngle > 0) {
+			hipAngle -= 1.0;
+		}
+		else if (hipAngle < 0) {
+			hipAngle += 1.0;
+		}
+
+		if (rightLegAngle > 0) {
+			rightLegAngle -= 2.0;
+		}
+		else if (rightLegAngle < 0) {
+			rightLegAngle += 2.0;
+		}
+
+		if (leftLegAngle > 0) {
+			leftLegAngle -= 2.0;
+		}
+		else if (leftLegAngle < 0) {
+			leftLegAngle += 2.0;
+		}
+		glutPostRedisplay();
+		glutTimerFunc(10, resetRobot, 0);
+	}
+}
+
