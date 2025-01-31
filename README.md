@@ -73,7 +73,7 @@ To run this project, you need:
 
 ## 📧 Contact
 For questions, suggestions, or feedback, feel free to reach out:  
-📩 **Your Email**: [hasibur2060@gmail.com](mailto:hasibur2060@gmail.com)
+📩 **Email**: [hasibur2060@gmail.com
 
 ---
 
